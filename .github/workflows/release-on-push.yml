@@ -71,7 +71,7 @@ jobs:
         with:
           tag_name: continuous
           name: Continuous Build
-          prerelease: true
+          prerelease: false
           make_latest: false
           files: |
             ${{ github.workspace }}\ExcelSheetsUnlocker - Smaller Download.zip
