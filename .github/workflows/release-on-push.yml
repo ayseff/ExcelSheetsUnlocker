@@ -1,4 +1,4 @@
-name: Release On Every Push
+name: Build Release Assets
 
 on:
   push:
