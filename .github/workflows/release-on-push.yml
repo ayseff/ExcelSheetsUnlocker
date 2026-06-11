@@ -1,0 +1,61 @@
+name: Release On Every Push
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore "ExcelSheetsUnlocker/ExcelSheetsUnlocker.csproj"
+
+      - name: Publish Windows EXE
+        run: >
+          dotnet publish "ExcelSheetsUnlocker/ExcelSheetsUnlocker.csproj"
+          -c Release
+          -r win-x64
+          --self-contained true
+          /p:PublishSingleFile=true
+          /p:PublishTrimmed=false
+          -o "${{ github.workspace }}\publish"
+
+      - name: Create ZIP
+        shell: pwsh
+        run: |
+          $zipPath = "${{ github.workspace }}\ExcelSheetsUnlocker-win-x64.zip"
+
+          if (Test-Path $zipPath) {
+            Remove-Item $zipPath -Force
+          }
+
+          Compress-Archive `
+            -Path "${{ github.workspace }}\publish\*" `
+            -DestinationPath $zipPath
+
+      - name: Create or update rolling release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: continuous
+          name: Continuous Build
+          prerelease: true
+          make_latest: false
+          files: |
+            ${{ github.workspace }}\ExcelSheetsUnlocker-win-x64.zip
+          body: |
+            Automatic build from commit `${{ github.sha }}`.
+          overwrite_files: true
