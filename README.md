@@ -1,0 +1,1 @@
+[![Release On Every Push](https://github.com/ayseff/ExcelSheetsUnlocker/actions/workflows/release-on-push.yml/badge.svg)](https://github.com/ayseff/ExcelSheetsUnlocker/actions/workflows/release-on-push.yml)
