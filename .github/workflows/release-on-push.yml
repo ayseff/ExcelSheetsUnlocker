@@ -24,7 +24,17 @@ jobs:
       - name: Restore
         run: dotnet restore "ExcelSheetsUnlocker/ExcelSheetsUnlocker.csproj"
 
-      - name: Publish Windows EXE
+      - name: Publish smaller download
+        run: >
+          dotnet publish "ExcelSheetsUnlocker/ExcelSheetsUnlocker.csproj"
+          -c Release
+          -r win-x64
+          --self-contained false
+          /p:PublishSingleFile=true
+          /p:PublishTrimmed=false
+          -o "${{ github.workspace }}\publish-smaller-download"
+
+      - name: Publish no-dotnet-needed download
         run: >
           dotnet publish "ExcelSheetsUnlocker/ExcelSheetsUnlocker.csproj"
           -c Release
@@ -32,20 +42,29 @@ jobs:
           --self-contained true
           /p:PublishSingleFile=true
           /p:PublishTrimmed=false
-          -o "${{ github.workspace }}\publish"
+          -o "${{ github.workspace }}\publish-no-dotnet-needed"
 
-      - name: Create ZIP
+      - name: Create ZIP files
         shell: pwsh
         run: |
-          $zipPath = "${{ github.workspace }}\ExcelSheetsUnlocker-win-x64.zip"
+          $smallerZipPath = "${{ github.workspace }}\ExcelSheetsUnlocker - Smaller Download.zip"
+          $noDotnetZipPath = "${{ github.workspace }}\ExcelSheetsUnlocker - No .NET Needed.zip"
 
-          if (Test-Path $zipPath) {
-            Remove-Item $zipPath -Force
+          if (Test-Path $smallerZipPath) {
+            Remove-Item $smallerZipPath -Force
+          }
+
+          if (Test-Path $noDotnetZipPath) {
+            Remove-Item $noDotnetZipPath -Force
           }
 
           Compress-Archive `
-            -Path "${{ github.workspace }}\publish\*" `
-            -DestinationPath $zipPath
+            -Path "${{ github.workspace }}\publish-smaller-download\*" `
+            -DestinationPath $smallerZipPath
+
+          Compress-Archive `
+            -Path "${{ github.workspace }}\publish-no-dotnet-needed\*" `
+            -DestinationPath $noDotnetZipPath
 
       - name: Create or update rolling release
         uses: softprops/action-gh-release@v2
@@ -55,7 +74,8 @@ jobs:
           prerelease: true
           make_latest: false
           files: |
-            ${{ github.workspace }}\ExcelSheetsUnlocker-win-x64.zip
+            ${{ github.workspace }}\ExcelSheetsUnlocker - Smaller Download.zip
+            ${{ github.workspace }}\ExcelSheetsUnlocker - No .NET Needed.zip
           body: |
             Automatic build from commit `${{ github.sha }}`.
           overwrite_files: true
