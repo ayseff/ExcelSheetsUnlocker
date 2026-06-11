@@ -3,7 +3,7 @@ name: Release On Every Push
 on:
   push:
     branches:
-      - main
+      - master
 
 permissions:
   contents: write
